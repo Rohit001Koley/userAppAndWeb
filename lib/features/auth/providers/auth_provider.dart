@@ -28,6 +28,7 @@ import 'package:flutter_grocery/main.dart';
 import 'package:flutter_grocery/common/providers/cart_provider.dart';
 import 'package:flutter_grocery/features/splash/providers/splash_provider.dart';
 import 'package:flutter_grocery/features/wishlist/providers/wishlist_provider.dart';
+import 'package:flutter_grocery/features/menu/widgets/confetti_celebration_widget.dart';
 import 'package:flutter_grocery/helper/custom_snackbar_helper.dart';
 import 'package:flutter_grocery/utill/app_constants.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -215,24 +216,23 @@ class AuthProvider with ChangeNotifier {
   }
 
   Future<void> deleteUser(BuildContext context) async {
+    final SplashProvider splashProvider = Provider.of<SplashProvider>(
+      context,
+      listen: false,
+    );
+    final WishListProvider wishListProvider = Provider.of<WishListProvider>(
+      context,
+      listen: false,
+    );
+    final CartProvider cartProvider = Provider.of<CartProvider>(
+      context,
+      listen: false,
+    );
     _isLoading = true;
     notifyListeners();
     ApiResponseModel? response = await authRepo?.deleteUser();
 
     if (response?.response?.statusCode == 200) {
-      final SplashProvider splashProvider = Provider.of<SplashProvider>(
-        context,
-        listen: false,
-      );
-      final WishListProvider wishListProvider = Provider.of<WishListProvider>(
-        context,
-        listen: false,
-      );
-      final CartProvider cartProvider = Provider.of<CartProvider>(
-        context,
-        listen: false,
-      );
-
       await splashProvider.removeSharedData();
       authRepo?.clearToken();
       wishListProvider.clearWishList();
@@ -245,7 +245,19 @@ class AuthProvider with ChangeNotifier {
       notifyListeners();
 
       showCustomSnackBarHelper('your_account_remove_successfully'.tr);
-      RouteHelper.getLoginRoute(action: RouteAction.pushNamedAndRemoveUntil);
+      showDialog(
+        context: Get.context!,
+        barrierDismissible: false,
+        builder: (_) => PopScope(
+          canPop: false,
+          child: const Dialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            child: ConfettiCelebrationWidget(),
+          ),
+        ),
+      );
     } else {
       _isLoading = false;
       notifyListeners();
